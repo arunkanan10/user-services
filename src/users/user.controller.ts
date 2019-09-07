@@ -1,6 +1,5 @@
 import * as express from 'express';
-import User from './user.interface';
-import UserManager from './user.manager';
+import UserManager from '../users/user.manager';
 
 class UserController {
 
@@ -19,9 +18,7 @@ class UserController {
 
     private getAllUsers = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
 
-        console.log('Ctrl - getAllUsers invoked');
-        let users = await this.userManager.getAllUsers(request, response);
-        console.log('Respond back from Ctrl. Bye');
+        let users = await this.userManager.getAllUsers();
         response.send(users);
     }
 }

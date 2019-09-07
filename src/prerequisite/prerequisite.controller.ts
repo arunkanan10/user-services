@@ -1,5 +1,11 @@
 import * as express from 'express';
+import { IUser } from '../models/user.model';
+import { IPost } from '../models/posts.model';
+import UserManager from '../users/user.manager';
+import PostManager from '../posts/post.manager';
+
 const https = require('https');
+const config = require("../config/config.js")
 
 class PrerequisiteController {
     public path = '/prerequisite';
@@ -10,22 +16,70 @@ class PrerequisiteController {
     }
 
     private initializeRoutes() {
-        this.router.get(this.path, this.fetchAndProcessUsers);
+        this.router.get(this.path + '/users', this.fetchAndProcessUsers);
+        this.router.get(this.path + '/posts', this.fetchAndProcessPosts);
     }
 
-    private fetchAndProcessUsers = (request: express.Request, response: express.Response) => {
+    private fetchAndProcessUsers = async (request: express.Request, response: express.Response) => {
         console.log ('######## fetchAndProcessUsers Started ');
-        this.httpRequest().then(function(result) {
-            console.log(result);
-            response.send(result);
+
+        this.httpRequest(config.usersUrl).then(function(result: IUser[]) {
+            result.forEach(item => {
+                let user = {
+                    id: item.id,
+                    name: item.name,
+                    username: item.username,
+                    address: {
+                        street: item.address.street,
+                        suite: item.address.suite,
+                        city: item.address.city,
+                        zipcode: item.address.zipcode,
+                        geo: {
+                            lat: item.address.geo.lat,
+                            lng: item.address.geo.lng,
+                        }
+                    },
+                    phone: item.phone,
+                    website: item.website,
+                    company: {
+                        name: item.company.name,
+                        catchPhrase: item.company.catchPhrase,
+                        bs: item.company.bs
+                    }
+                }
+                new UserManager().createUser(user);
+            });
+
+            response.send('User details inserted');
         }, function(err) {
-            console.log(err);
+            response.send(err);
         });
     }
 
-    private httpRequest() {
+    private fetchAndProcessPosts = async (request: express.Request, response: express.Response) => {
+        console.log ('######## fetchAndProcessPosts Started ');
+
+        this.httpRequest(config.postsUrl).then(function(result: IPost[]) {
+            
+            result.forEach(item => {
+                let post = {
+                    id: item.id,
+                    userId: item.userId,
+                    title: item.title,
+                    body: item.body
+                }
+                new PostManager().CreatePost(post);
+            });
+
+            response.send('Posts details inserted');
+        }, function(err) {
+            response.send(err);
+        });
+    }
+
+    private httpRequest(url) {
         return new Promise(function(resolve, reject) {
-            https.get('https://jsonplaceholder.typicode.com/users', (resp) => {
+            https.get(url, (resp) => {
                 let data = '';
 
                 resp.on('data', (chunk) => {
@@ -33,7 +87,6 @@ class PrerequisiteController {
                 });
 
                 resp.on('end', () => {
-                    console.log(JSON.parse(data));
                     resolve(JSON.parse(data));
                 });
 
