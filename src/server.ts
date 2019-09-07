@@ -8,6 +8,6 @@ const constrollers = [new UserController(), new PrerequisiteController()];
 const app = new App(constrollers);
 
 app.listen();
-const db = 'mongodb://localhost/test1';
+const db = 'mongodb://localhost/users-db';
 connect({db});
 
